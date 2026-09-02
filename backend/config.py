@@ -4,7 +4,7 @@
 # when a setting changes, rather than searching through the entire codebase.
 
 # Application identity
-APP_NAME = "CareSync"
+APP_NAME = "CareSc"
 APP_VERSION = "1.0.2"
 APP_DESCRIPTION = "Patient portal for hospital and clinic management"
 
