@@ -35,7 +35,7 @@ def get_db():
         host='localhost',
         port=3306,
         user='root',
-        password='',     # change this to your own MySQL password
+        password='Apurva@234',     # change this to your own MySQL password
         database='caresync'
     )
 
@@ -220,4 +220,28 @@ def get_patient_by_id(patient_id: int):
 
     return patient
 
+
+@app.get('/patients/{patient_id}/appointments')
+def get_patient_appointments(patient_id: int):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute(
+        '''
+        SELECT
+            a.*
+        FROM appointment a
+        JOIN patient p ON p.patient_id = a.patient_id
+        WHERE p.patient_id = %s
+        ORDER BY a.appointment_id DESC
+        ''',
+        (patient_id,)
+    )
+
+    appointments = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return {'appointments': appointments}
 
