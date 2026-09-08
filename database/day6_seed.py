@@ -19,7 +19,7 @@ conn = mysql.connector.connect(
     host='localhost',
     port=3306,
     user='root',
-    password='Patil@200416',     # change to your MySQL password
+    password='Apurva@234',     # change to your MySQL password
     database='caresync'
 )
 cur = conn.cursor()
