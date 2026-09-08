@@ -8,7 +8,7 @@
 # To run this file:
 #   uvicorn main:app --reload
 
-from fastapi import FastAPI                        # the web framework
+from fastapi import FastAPI, HTTPException                        # the web framework
 from fastapi.middleware.cors import CORSMiddleware # allows browser to call this API
 import mysql.connector                             # connects to MySQL
 
@@ -35,7 +35,7 @@ def get_db():
         host='localhost',
         port=3306,
         user='root',
-        password='Apurva@234',     # change this to your own MySQL password
+        password='',     # change this to your own MySQL password
         database='caresync'
     )
 
@@ -181,3 +181,43 @@ def get_doctors():
     db.close()
 
     return {'doctors': doctors}
+
+
+# ── ENDPOINT 5: Get patient by ID ────────────────────────────────────────────
+# URL: http://127.0.0.1:8000/patients/{patient_id}
+# Returns: details of one patient
+@app.get('/patients/{patient_id}')
+def get_patient_by_id(patient_id: int):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute(
+        '''
+        SELECT
+            patient_id,
+            full_name,
+            gender,
+            blood_group,
+            DATE_FORMAT(date_of_birth, '%d %b %Y') AS date_of_birth,
+            DATE_FORMAT(created_at, '%d %b %Y') AS registered_on
+        FROM patient
+        WHERE patient_id = %s
+          AND is_deleted = 0
+        ''',
+        (patient_id,)
+    )
+
+    patient = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if patient is None:
+        raise HTTPException(
+            status_code=404,
+            detail='Patient not found'
+        )
+
+    return patient
+
+
