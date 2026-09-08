@@ -245,3 +245,29 @@ def get_patient_appointments(patient_id: int):
 
     return {'appointments': appointments}
 
+
+# ── ENDPOINT: Doctor Analytics ──────────────────────────────────────────────
+# URL: http://127.0.0.1:8000/analytics/doctors
+# Returns: doctor names and their total appointment counts
+
+@app.get('/analytics/doctors')
+def get_doctor_analytics():
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute(
+        '''
+        SELECT
+            doctor_name,
+            total_appointments
+        FROM vw_doctor_appointment_summary
+        '''
+    )
+
+    doctors = cursor.fetchall()
+
+    cursor.close()
+    db.close()
+
+    return doctors
+
