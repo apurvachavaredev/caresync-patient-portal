@@ -10,7 +10,53 @@
         This means no installation is needed.
         The browser downloads Vue automatically when the page opens.
     -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js">
+        async function searchPatient() {
+    const patientId = document.getElementById("patientId").value;
+    const result = document.getElementById("patientResult");
+
+    // Check if ID was entered
+    if (!patientId) {
+        result.innerHTML = "<p>Please enter a Patient ID.</p>";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://127.0.0.1:8000/patients/${patientId}`
+        );
+
+        // Patient does not exist
+        if (response.status === 404) {
+            result.innerHTML = "<p>Patient not found.</p>";
+            return;
+        }
+
+        // Other API errors
+        if (!response.ok) {
+            result.innerHTML = "<p>Something went wrong.</p>";
+            return;
+        }
+
+        const patient = await response.json();
+
+        // Display patient details
+        result.innerHTML = `
+            <div class="patient-details">
+                <h3>Patient Details</h3>
+                <p><strong>Patient Name:</strong> ${patient.full_name}</p>
+                <p><strong>Blood Group:</strong> ${patient.blood_group}</p>
+                <p><strong>Email:</strong> ${patient.email || "Not available"}</p>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error(error);
+        result.innerHTML =
+            "<p>Cannot connect to the backend server.</p>";
+    }
+}
+    </script>
 
     <style>
         /* ── Reset and base ──────────────────────────────── */
@@ -147,6 +193,14 @@
 </head>
 
 <body>
+
+    <div class="patient-search">
+    <label for="patientId">Enter Patient ID</label>
+    <input type="number" id="patientId" placeholder="Enter patient ID">
+    <button type="button" onclick="searchPatient()">Search</button>
+</div>
+
+<div id="patientResult"></div>
 
 <!-- ───────────────────────────────────────────────────────────────────────
      Navigation Bar
