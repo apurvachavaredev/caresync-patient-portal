@@ -1,488 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CareSync Hospital Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareSync Hospital Dashboard</title>
 
-    <!--
-        Vue 3 is loaded from a CDN (Content Delivery Network).
-        This means no installation is needed.
-        The browser downloads Vue automatically when the page opens.
-    -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js">
-        async function searchPatient() {
-    const patientId = document.getElementById("patientId").value;
-    const result = document.getElementById("patientResult");
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    // Check if ID was entered
-    if (!patientId) {
-        result.innerHTML = "<p>Please enter a Patient ID.</p>";
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `http://127.0.0.1:8000/patients/${patientId}`
-        );
-
-        // Patient does not exist
-        if (response.status === 404) {
-            result.innerHTML = "<p>Patient not found.</p>";
-            return;
-        }
-
-        // Other API errors
-        if (!response.ok) {
-            result.innerHTML = "<p>Something went wrong.</p>";
-            return;
-        }
-
-        const patient = await response.json();
-
-        // Display patient details
-        result.innerHTML = `
-            <div class="patient-details">
-                <h3>Patient Details</h3>
-                <p><strong>Patient Name:</strong> ${patient.full_name}</p>
-                <p><strong>Blood Group:</strong> ${patient.blood_group}</p>
-                <p><strong>Email:</strong> ${patient.email || "Not available"}</p>
-            </div>
-        `;
-
-    } catch (error) {
-        console.error(error);
-        result.innerHTML =
-            "<p>Cannot connect to the backend server.</p>";
-    }
-}
-    </script>
-
-    <style>
-        /* ── Reset and base ──────────────────────────────── */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f0f2f5;
-            color: #1a1a1a;
-        }
-
-        /* ── Top navigation bar ──────────────────────────── */
-        .navbar {
-            background: #1f3864;
-            color: #ffffff;
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .navbar h1 { font-size: 22px; font-weight: 600; }
-        .navbar span { font-size: 14px; opacity: 0.8; }
-
-        /* ── Page wrapper ────────────────────────────────── */
-        .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
-
-        /* ── Section headings ────────────────────────────── */
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1f3864;
-            margin-bottom: 16px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid #1f3864;
-        }
-
-        /* ── Summary cards ───────────────────────────────── */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 40px;
-        }
-        .card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 24px 20px;
-            border-left: 4px solid #1f3864;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        }
-        .card .label {
-            font-size: 13px;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        .card .value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1f3864;
-        }
-        .card.red   { border-left-color: #c0392b; }
-        .card.red .value { color: #c0392b; }
-        .card.green { border-left-color: #1a7a4a; }
-        .card.green .value { color: #1a7a4a; }
-
-        /* ── Tab buttons ─────────────────────────────────── */
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab-btn {
-            padding: 8px 20px;
-            border: 2px solid #1f3864;
-            background: #ffffff;
-            color: #1f3864;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.15s;
-        }
-        .tab-btn.active { background: #1f3864; color: #ffffff; }
-
-        /* ── Search box ──────────────────────────────────── */
-        .search-box {
-            width: 100%;
-            max-width: 360px;
-            padding: 8px 14px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 16px;
-            outline: none;
-        }
-        .search-box:focus { border-color: #1f3864; }
-
-        /* ── Data table ──────────────────────────────────── */
-        .table-wrap {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            overflow-x: auto;
-            margin-bottom: 40px;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th {
-            background: #1f3864;
-            color: #ffffff;
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 13px;
-        }
-        td { padding: 10px 16px; border-bottom: 1px solid #f0f0f0; }
-        tr:last-child td { border-bottom: none; }
-        tr:nth-child(even) td { background: #fafafa; }
-
-        /* ── Status badges ───────────────────────────────── */
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-paid     { background: #d4edda; color: #155724; }
-        .badge-pending  { background: #fff3cd; color: #856404; }
-        .badge-partial  { background: #d1ecf1; color: #0c5460; }
-        .badge-rejected { background: #f8d7da; color: #721c24; }
-
-        /* ── Loading and error states ────────────────────── */
-        .loading { text-align: center; padding: 40px; color: #888; font-size: 16px; }
-        .error   { text-align: center; padding: 40px; color: #c0392b; font-size: 15px; }
-    </style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a1a}
+.navbar{background:#1f3864;color:white;padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.navbar h1{font-size:22px;font-weight:600}.navbar span{font-size:13px;opacity:.8}
+.page{max-width:1200px;margin:0 auto;padding:28px 24px}
+.section-title{font-size:18px;font-weight:600;color:#1f3864;margin:25px 0 16px;padding-bottom:6px;border-bottom:2px solid #1f3864}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:30px}
+.card,.chart-card{background:white;border-radius:8px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat-card{border-left:4px solid #1f3864;padding:20px}
+.stat-card.red{border-left-color:#c0392b}.stat-card.green{border-left-color:#1a7a4a}
+.label{font-size:12px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.value{font-size:30px;font-weight:700;color:#1f3864}.red .value{color:#c0392b}.green .value{color:#1a7a4a}
+.tabs{display:flex;gap:8px;margin:10px 0 20px;flex-wrap:wrap}
+.tab-btn{padding:9px 17px;border:2px solid #1f3864;background:white;color:#1f3864;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+.tab-btn.active{background:#1f3864;color:white}
+.search-box{width:100%;max-width:360px;padding:9px 14px;border:1px solid #ccc;border-radius:4px;font-size:14px;margin-bottom:16px}
+.table-wrap{background:white;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow-x:auto;margin-bottom:30px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#1f3864;color:white;padding:12px 15px;text-align:left;font-size:13px}
+td{padding:10px 15px;border-bottom:1px solid #f0f0f0}
+tr:nth-child(even) td{background:#fafafa}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.badge-paid{background:#d4edda;color:#155724}.badge-pending{background:#fff3cd;color:#856404}
+.badge-partial{background:#d1ecf1;color:#0c5460}.badge-rejected{background:#f8d7da;color:#721c24}
+.loading{text-align:center;padding:60px;color:#888}.error{text-align:center;padding:40px;color:#c0392b}
+.patient-search{background:white;padding:18px 24px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.patient-search input{padding:8px;margin:0 8px 0 10px}.patient-search button{padding:8px 16px;cursor:pointer;background:#1f3864;color:white;border:0;border-radius:4px}
+.patient-details{background:white;padding:20px;margin:20px 0;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.patient-details p{margin-top:10px}
+.chart-card{margin-bottom:24px}
+.chart-wrap{position:relative;height:360px;width:100%}
+.heatmap{overflow-x:auto}.heatmap table{min-width:800px}
+.heatmap th{text-align:center}.heatmap td{text-align:center;border:1px solid #e8e8e8;min-width:75px;font-weight:600}
+.heatmap .row-label{background:#f5f5f5;color:#1f3864;text-align:left}
+.pills{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.pill{background:white;border-left:4px solid #1f3864;border-radius:6px;padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.07);flex:1;min-width:150px}
+.pill .plabel{font-size:12px;color:#666;text-transform:uppercase;margin-bottom:4px}.pill .pval{font-size:23px;font-weight:700;color:#1f3864}
+.pill.red{border-left-color:#c0392b}.pill.red .pval{color:#c0392b}.pill.green{border-left-color:#1a7a4a}.pill.green .pval{color:#1a7a4a}
+.risk-table{width:100%;border-collapse:collapse;font-size:13px}.risk-table th{padding:9px 12px}.risk-table td{padding:8px 12px}
+.badge-rare{display:inline-block;padding:2px 10px;background:#fde8e8;color:#922;border-radius:12px;font-size:12px;font-weight:700}
+.subtitle{font-size:13px;color:#555;margin:-8px 0 18px}
+@media(max-width:700px){.navbar{padding:14px 18px}.navbar span{display:none}.page{padding:20px 14px}.patient-search{padding:15px}.patient-search input{margin:8px 5px 0 0}}
+</style>
 </head>
 
 <body>
-
-    <div class="patient-search">
-    <label for="patientId">Enter Patient ID</label>
-    <input type="number" id="patientId" placeholder="Enter patient ID">
-    <button type="button" onclick="searchPatient()">Search</button>
+<div class="navbar">
+  <h1>CareSync Hospital Dashboard</h1>
+  <span>Live Data | MySQL | FastAPI | Vue.js | Chart.js</span>
 </div>
 
+<div class="patient-search">
+  <label for="patientId"><strong>Enter Patient ID</strong></label>
+  <input type="number" id="patientId" placeholder="Enter patient ID">
+  <button type="button" onclick="searchPatient()">Search</button>
+</div>
 <div id="patientResult"></div>
 
-<!-- ───────────────────────────────────────────────────────────────────────
-     Navigation Bar
-     The {{ }} syntax is Vue. It means: display the value of this variable.
-──────────────────────────────────────────────────────────────────────────── -->
-<div class="navbar">
-    <h1>CareSync Hospital Dashboard</h1>
-    <span>Live Data  |  MySQL  |  FastAPI  |  Vue.js</span>
+<div id="app">
+<div class="page">
+
+<div v-if="loading" class="loading">Loading hospital data and analytics...</div>
+
+<div v-else-if="error" class="error">
+  Cannot connect to the backend server.<br>
+  Make sure the merged FastAPI <strong>main.py</strong> is running on port 8000.
 </div>
 
-<!-- ───────────────────────────────────────────────────────────────────────
-     Main application div. id='app' is what Vue attaches to.
-──────────────────────────────────────────────────────────────────────────── -->
-<div id="app">
-    <div class="page">
+<div v-else>
+  <p class="section-title">Hospital Summary</p>
 
-        <!-- Loading state: shown while data is being fetched -->
-        <div v-if="loading" class="loading">Loading hospital data...</div>
+  <div class="cards">
+    <div class="card stat-card"><div class="label">Total Patients</div><div class="value">{{summary.total_patients}}</div></div>
+    <div class="card stat-card"><div class="label">Active Doctors</div><div class="value">{{summary.total_doctors}}</div></div>
+    <div class="card stat-card"><div class="label">Total Appointments</div><div class="value">{{summary.total_appointments}}</div></div>
+    <div class="card stat-card"><div class="label">Total Bills</div><div class="value">{{summary.total_bills}}</div></div>
+    <div class="card stat-card red"><div class="label">Rejection Rate</div><div class="value">{{summary.rejection_rate}}%</div></div>
+    <div class="card stat-card green"><div class="label">Revenue Collected</div><div class="value">Rs {{formatNumber(summary.total_revenue)}}</div></div>
+  </div>
 
-        <!-- Error state: shown if the API cannot be reached -->
-        <div v-else-if="error" class="error">
-            Cannot connect to the backend server.<br/>
-            Make sure uvicorn is running in your Command Prompt.<br/>
-            Command: uvicorn main:app --reload
-        </div>
+  <div class="tabs">
+    <button class="tab-btn" :class="{active:activeTab==='patients'}" @click="activeTab='patients'">Patients</button>
+    <button class="tab-btn" :class="{active:activeTab==='billing'}" @click="activeTab='billing'">Billing</button>
+    <button class="tab-btn" :class="{active:activeTab==='doctors'}" @click="activeTab='doctors'">Doctors</button>
+    <button class="tab-btn" :class="{active:activeTab==='doctor-summary'}" @click="switchTab('doctor-summary')">Doctor Summary</button>
+    <button class="tab-btn" :class="{active:activeTab==='revenue'}" @click="switchTab('revenue')">Revenue Trend</button>
+    <button class="tab-btn" :class="{active:activeTab==='heatmap'}" @click="switchTab('heatmap')">Appointment Heatmap</button>
+    <button class="tab-btn" :class="{active:activeTab==='bloodgroup'}" @click="switchTab('bloodgroup')">Blood Group Report</button>
+  </div>
 
-        <!-- Main content: shown when data has loaded successfully -->
-        <div v-else>
+  <div v-if="activeTab==='patients'">
+    <input class="search-box" v-model="patientSearch" placeholder="Search patient by name...">
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Full Name</th><th>Gender</th><th>Blood Group</th><th>Date of Birth</th><th>Registered On</th></tr></thead>
+      <tbody>
+        <tr v-for="p in filteredPatients" :key="p.patient_id">
+          <td>{{p.patient_id}}</td><td>{{p.full_name}}</td><td>{{p.gender}}</td><td>{{p.blood_group}}</td><td>{{p.date_of_birth}}</td><td>{{p.registered_on}}</td>
+        </tr>
+        <tr v-if="filteredPatients.length===0"><td colspan="6" style="text-align:center">No patients match your search.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
 
-            <!-- ── Summary Cards ────────────────────────────────────── -->
-            <p class="section-title">Hospital Summary</p>
-            <div class="cards">
-                <div class="card">
-                    <div class="label">Total Patients</div>
-                    <div class="value">{{ summary.total_patients }}</div>
-                </div>
-                <div class="card">
-                    <div class="label">Active Doctors</div>
-                    <div class="value">{{ summary.total_doctors }}</div>
-                </div>
-                <div class="card">
-                    <div class="label">Total Appointments</div>
-                    <div class="value">{{ summary.total_appointments }}</div>
-                </div>
-                <div class="card">
-                    <div class="label">Total Bills</div>
-                    <div class="value">{{ summary.total_bills }}</div>
-                </div>
-                <div class="card red">
-                    <div class="label">Rejection Rate</div>
-                    <div class="value">{{ summary.rejection_rate }}%</div>
-                </div>
-                <div class="card green">
-                    <div class="label">Revenue Collected</div>
-                    <div class="value">Rs {{ formatNumber(summary.total_revenue) }}</div>
-                </div>
-            </div>
+  <div v-if="activeTab==='billing'">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Bill ID</th><th>Patient Name</th><th>Total Amount</th><th>Amount Paid</th><th>Status</th><th>Bill Date</th></tr></thead>
+      <tbody>
+        <tr v-for="b in bills" :key="b.bill_id">
+          <td>{{b.bill_id}}</td><td>{{b.patient_name}}</td>
+          <td>Rs {{Number(b.total_amount).toFixed(2)}}</td><td>Rs {{Number(b.amount_paid).toFixed(2)}}</td>
+          <td><span class="badge" :class="badgeClass(b.status)">{{b.status}}</span></td><td>{{b.bill_date}}</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
 
-            <!-- ── Tab Buttons ──────────────────────────────────────── -->
-            <div class="tabs">
-                <!--
-                    @click is Vue shorthand for onclick.
-                    :class is Vue shorthand for binding CSS classes dynamically.
-                    When activeTab equals 'patients', the tab-btn gets the 'active' class.
-                -->
-                <button class="tab-btn" :class="{ active: activeTab === 'patients' }"
-                        @click="activeTab = 'patients'">Patients</button>
-                <button class="tab-btn" :class="{ active: activeTab === 'billing' }"
-                        @click="activeTab = 'billing'">Billing</button>
-                <button class="tab-btn" :class="{ active: activeTab === 'doctors' }"
-                        @click="activeTab = 'doctors'">Doctors</button>
-            </div>
+  <div v-if="activeTab==='doctors'">
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>Full Name</th><th>Specialisation</th><th>Completed Appointments</th></tr></thead>
+      <tbody>
+        <tr v-for="d in doctors" :key="d.doctor_id">
+          <td>{{d.doctor_id}}</td><td>{{d.full_name}}</td><td>{{d.specialisation}}</td><td>{{d.total_appointments}}</td>
+        </tr>
+      </tbody>
+    </table></div>
+  </div>
 
-            <!-- ── Patients Tab ─────────────────────────────────────── -->
-            <!--
-                v-if="activeTab === 'patients'" means:
-                only show this section when the Patients tab is active.
-            -->
-            <div v-if="activeTab === 'patients'">
-                <input
-                    class="search-box"
-                    v-model="patientSearch"
-                    placeholder="Search patient by name..."
-                />
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Full Name</th>
-                                <th>Gender</th>
-                                <th>Blood Group</th>
-                                <th>Date of Birth</th>
-                                <th>Registered On</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!--
-                                v-for loops through the filteredPatients array.
-                                :key is required by Vue to track each row efficiently.
-                            -->
-                            <tr v-for="p in filteredPatients" :key="p.patient_id">
-                                <td>{{ p.patient_id }}</td>
-                                <td>{{ p.full_name }}</td>
-                                <td>{{ p.gender }}</td>
-                                <td>{{ p.blood_group }}</td>
-                                <td>{{ p.date_of_birth }}</td>
-                                <td>{{ p.registered_on }}</td>
-                            </tr>
-                            <tr v-if="filteredPatients.length === 0">
-                                <td colspan="6" style="text-align:center; color:#888;">
-                                    No patients match your search.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  <div v-if="activeTab==='doctor-summary'">
+    <p class="section-title">Doctor Appointment Summary</p>
+    <p class="subtitle">Total appointments per doctor from <code>/analytics/doctors</code>.</p>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="doctorAppointmentChart"></canvas></div></div>
+  </div>
 
-            <!-- ── Billing Tab ──────────────────────────────────────── -->
-            <div v-if="activeTab === 'billing'">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bill ID</th>
-                                <th>Patient Name</th>
-                                <th>Total Amount</th>
-                                <th>Amount Paid</th>
-                                <th>Status</th>
-                                <th>Bill Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="b in bills" :key="b.bill_id">
-                                <td>{{ b.bill_id }}</td>
-                                <td>{{ b.patient_name }}</td>
-                                <td>Rs {{ b.total_amount.toFixed(2) }}</td>
-                                <td>Rs {{ b.amount_paid.toFixed(2) }}</td>
-                                <td>
-                                    <!--
-                                        badgeClass() is a method defined in the Vue app below.
-                                        It returns the correct CSS class based on the status value.
-                                    -->
-                                    <span class="badge" :class="badgeClass(b.status)">
-                                        {{ b.status }}
-                                    </span>
-                                </td>
-                                <td>{{ b.bill_date }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  <div v-if="activeTab==='revenue'">
+    <p class="section-title">Monthly Revenue Trend vs Rejection Rate</p>
+    <p class="subtitle">Last 12 months: revenue collected and bill rejection rate.</p>
+    <div class="pills">
+      <div class="pill green"><div class="plabel">Total Collected (12m)</div><div class="pval">Rs {{totalCollected}}</div></div>
+      <div class="pill red"><div class="plabel">Avg Rejection Rate</div><div class="pval">{{avgRejection}}%</div></div>
+      <div class="pill"><div class="plabel">Best Month</div><div class="pval">{{bestMonth}}</div></div>
+      <div class="pill"><div class="plabel">Total Bills Raised</div><div class="pval">{{totalBills}}</div></div>
+    </div>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="revenueChart"></canvas></div></div>
+  </div>
 
-            <!-- ── Doctors Tab ──────────────────────────────────────── -->
-            <div v-if="activeTab === 'doctors'">
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Full Name</th>
-                                <th>Specialisation</th>
-                                <th>Completed Appointments</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="d in doctors" :key="d.doctor_id">
-                                <td>{{ d.doctor_id }}</td>
-                                <td>{{ d.full_name }}</td>
-                                <td>{{ d.specialisation }}</td>
-                                <td>{{ d.total_appointments }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  <div v-if="activeTab==='heatmap'">
+    <p class="section-title">Appointment Volume Heatmap</p>
+    <p class="subtitle">Completed appointments per day of week, per month.</p>
+    <div class="chart-card"><div class="heatmap"><table>
+      <thead><tr><th>Month</th><th v-for="d in dayLabels" :key="d">{{d}}</th></tr></thead>
+      <tbody>
+        <tr v-for="row in heatmapRows" :key="row.month">
+          <td class="row-label">{{row.month}}</td>
+          <td v-for="d in dayLabels" :key="d" :style="heatColor(row.days[d],heatmapMax)">{{row.days[d] || ''}}</td>
+        </tr>
+      </tbody>
+    </table></div></div>
+  </div>
 
-        </div> <!-- end v-else -->
-    </div> <!-- end page -->
-</div> <!-- end #app -->
+  <div v-if="activeTab==='bloodgroup'">
+    <p class="section-title">Patient Blood Group Distribution</p>
+    <p class="subtitle">Active patients by blood group. Rare groups are highlighted in the chart.</p>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="bloodChart"></canvas></div></div>
+
+    <div class="card" v-if="bloodData.risk_patients && bloodData.risk_patients.length">
+      <p style="font-weight:700;color:#922;margin-bottom:12px">Rare Blood Group Patients with Upcoming Appointments</p>
+      <table class="risk-table">
+        <thead><tr><th>Blood Group</th><th>Patient Name</th><th>Appointment Date</th><th>Doctor</th><th>Specialisation</th></tr></thead>
+        <tbody>
+          <tr v-for="rp in bloodData.risk_patients" :key="rp.patient_name+rp.appointment_date">
+            <td><span class="badge-rare">{{rp.blood_group}}</span></td><td>{{rp.patient_name}}</td><td>{{rp.appointment_date}}</td><td>{{rp.doctor_name}}</td><td>{{rp.specialisation}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" v-else><p style="color:#555">No rare blood group patients have appointments in the next 30 days.</p></div>
+  </div>
+</div>
+</div>
+</div>
 
 <script>
-    // Vue.createApp defines the entire frontend application.
-    // data() holds all the variables the page uses.
-    // methods holds all the functions the page uses.
-    // mounted() runs automatically when the page first loads.
+const API_BASE = "http://127.0.0.1:8000";
 
-    const { createApp } = Vue;
+async function searchPatient() {
+  const patientId = document.getElementById("patientId").value;
+  const result = document.getElementById("patientResult");
+  if (!patientId) {
+    result.innerHTML = "<p style='padding:15px 24px'>Please enter a Patient ID.</p>";
+    return;
+  }
+  try {
+    const response = await fetch(`${API_BASE}/patients/${patientId}`);
+    if (response.status === 404) { result.innerHTML="<p style='padding:15px 24px'>Patient not found.</p>"; return; }
+    if (!response.ok) throw new Error("Request failed");
+    const patient = await response.json();
+    result.innerHTML = `
+      <div class="patient-details">
+        <h3>Patient Details</h3>
+        <p><strong>Patient ID:</strong> ${patient.patient_id}</p>
+        <p><strong>Patient Name:</strong> ${patient.full_name}</p>
+        <p><strong>Gender:</strong> ${patient.gender}</p>
+        <p><strong>Blood Group:</strong> ${patient.blood_group || "Not available"}</p>
+        <p><strong>Date of Birth:</strong> ${patient.date_of_birth}</p>
+        <p><strong>Registered On:</strong> ${patient.registered_on}</p>
+      </div>`;
+  } catch(e) {
+    console.error(e);
+    result.innerHTML="<p style='padding:15px 24px;color:#c0392b'>Cannot connect to the backend server.</p>";
+  }
+}
 
-    createApp({
-        data() {
-            return {
-                // State flags
-                loading:  true,   // true while waiting for API response
-                error:    false,  // true if API call fails
+let doctorChart = null, revenueChart = null, bloodChart = null;
 
-                // Which tab is currently visible
-                activeTab: 'patients',
+const {createApp} = Vue;
 
-                // Search box value for patient filter
-                patientSearch: '',
+createApp({
+  data() {
+    return {
+      loading:true, error:false, activeTab:"patients", patientSearch:"",
+      summary:{}, patients:[], bills:[], doctors:[], doctorAnalytics:[],
+      revenueData:[], heatmapData:[], bloodData:{}
+    };
+  },
 
-                // Data from the API
-                summary:  {},
-                patients: [],
-                bills:    [],
-                doctors:  [],
-            };
+  computed:{
+    filteredPatients(){
+      const term=this.patientSearch.toLowerCase().trim();
+      return term ? this.patients.filter(p=>(p.full_name||"").toLowerCase().includes(term)) : this.patients;
+    },
+    totalCollected(){
+      return Math.round(this.revenueData.reduce((s,r)=>s+Number(r.collected||0),0)).toLocaleString("en-IN");
+    },
+    totalBills(){
+      return this.revenueData.reduce((s,r)=>s+Number(r.total_bills||0),0).toLocaleString("en-IN");
+    },
+    avgRejection(){
+      if(!this.revenueData.length)return "0.0";
+      return (this.revenueData.reduce((s,r)=>s+Number(r.rejection_rate_pct||0),0)/this.revenueData.length).toFixed(1);
+    },
+    bestMonth(){
+      if(!this.revenueData.length)return "--";
+      return this.revenueData.reduce((a,b)=>Number(b.collected||0)>Number(a.collected||0)?b:a).month;
+    },
+    dayLabels(){return ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];},
+    heatmapRows(){
+      const map={};
+      for(const r of this.heatmapData){
+        if(!map[r.month])map[r.month]={month:r.month,days:{}};
+        map[r.month].days[r.day_name]=Number(r.total||0);
+      }
+      return Object.values(map).sort((a,b)=>a.month.localeCompare(b.month));
+    },
+    heatmapMax(){return Math.max(...this.heatmapData.map(r=>Number(r.total||0)),1);}
+  },
+
+  methods:{
+    badgeClass(status){
+      return {"Paid":"badge-paid","Pending":"badge-pending","Partially Paid":"badge-partial","Rejected":"badge-rejected"}[status]||"";
+    },
+    formatNumber(n){return Number(n||0).toLocaleString("en-IN");},
+
+    async fetchAll(){
+      try{
+        const urls=[
+          "/summary","/patients","/billing","/doctors",
+          "/analytics/doctors","/revenue-trend","/appointment-heatmap","/blood-groups"
+        ];
+        const responses=await Promise.all(urls.map(u=>fetch(API_BASE+u)));
+        if(responses.some(r=>!r.ok)) throw new Error("One or more API requests failed.");
+
+        const [summary,patients,billing,doctors,doctorAnalytics,revenue,heatmap,blood]=
+          await Promise.all(responses.map(r=>r.json()));
+
+        this.summary=summary;
+        this.patients=patients.patients||[];
+        this.bills=billing.bills||[];
+        this.doctors=doctors.doctors||[];
+        this.doctorAnalytics=Array.isArray(doctorAnalytics)?doctorAnalytics:[];
+        this.revenueData=revenue.data||[];
+        this.heatmapData=heatmap.data||[];
+        this.bloodData=blood||{};
+        this.loading=false;
+
+        this.$nextTick(()=>this.drawActiveChart());
+      }catch(e){
+        console.error("API Error:",e);
+        this.loading=false;
+        this.error=true;
+      }
+    },
+
+    switchTab(name){
+      this.activeTab=name;
+      this.$nextTick(()=>this.drawActiveChart());
+    },
+
+    drawActiveChart(){
+      if(this.activeTab==="doctor-summary")this.drawDoctorChart();
+      if(this.activeTab==="revenue")this.drawRevenueChart();
+      if(this.activeTab==="bloodgroup")this.drawBloodChart();
+    },
+
+    drawDoctorChart(){
+      const el=document.getElementById("doctorAppointmentChart");
+      if(!el)return;
+      if(doctorChart)doctorChart.destroy();
+      doctorChart=new Chart(el,{
+        type:"bar",
+        data:{
+          labels:this.doctorAnalytics.map(d=>d.doctor_name),
+          datasets:[{label:"Total Appointments",data:this.doctorAnalytics.map(d=>Number(d.total_appointments||0)),backgroundColor:"#1f3864"}]
         },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true},title:{display:true,text:"Appointments Per Doctor"}},
+          scales:{x:{title:{display:true,text:"Doctor Name"}},y:{beginAtZero:true,title:{display:true,text:"Total Appointments"},ticks:{precision:0}}}}
+      });
+    },
 
-        computed: {
-            // computed properties recalculate automatically
-            // whenever their dependencies change.
-            // filteredPatients updates every time patientSearch changes.
-            filteredPatients() {
-                const term = this.patientSearch.toLowerCase();
-                if (!term) return this.patients;
-                return this.patients.filter(p =>
-                    p.full_name.toLowerCase().includes(term)
-                );
-            },
+    drawRevenueChart(){
+      const el=document.getElementById("revenueChart");
+      if(!el)return;
+      if(revenueChart)revenueChart.destroy();
+      revenueChart=new Chart(el,{
+        type:"line",
+        data:{
+          labels:this.revenueData.map(r=>r.month),
+          datasets:[
+            {label:"Revenue Collected (Rs)",data:this.revenueData.map(r=>Number(r.collected||0)),borderColor:"#1a7a4a",backgroundColor:"rgba(26,122,74,.08)",borderWidth:2.5,fill:true,tension:.3,yAxisID:"yRevenue"},
+            {label:"Rejection Rate (%)",data:this.revenueData.map(r=>Number(r.rejection_rate_pct||0)),borderColor:"#c0392b",borderWidth:2,fill:false,tension:.3,borderDash:[5,3],yAxisID:"yRate"}
+          ]
         },
+        options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+          scales:{
+            yRevenue:{type:"linear",position:"left",title:{display:true,text:"Revenue Collected (Rs)"},ticks:{callback:v=>"Rs "+Number(v).toLocaleString("en-IN")}},
+            yRate:{type:"linear",position:"right",title:{display:true,text:"Rejection Rate (%)"},grid:{drawOnChartArea:false},beginAtZero:true}
+          }}
+      });
+    },
 
-        methods: {
-            // Returns the correct CSS badge class for a billing status
-            badgeClass(status) {
-                const map = {
-                    'Paid':          'badge-paid',
-                    'Pending':       'badge-pending',
-                    'Partially Paid':'badge-partial',
-                    'Rejected':      'badge-rejected',
-                };
-                return map[status] || '';
-            },
-
-            // Formats large numbers with commas: 1234567 becomes 1,234,567
-            formatNumber(n) {
-                return Number(n).toLocaleString('en-IN');
-            },
-
-            // Fetches all data from the FastAPI backend
-            async fetchAll() {
-                try {
-                    // The base URL where FastAPI is running
-                    const base = 'http://127.0.0.1:8000';
-
-                    // fetch() is a built-in browser function that calls an API.
-                    // Promise.all runs all four requests at the same time
-                    // instead of one after the other, making the page load faster.
-                    const [s, p, b, d] = await Promise.all([
-                        fetch(`${base}/summary`).then(r => r.json()),
-                        fetch(`${base}/patients`).then(r => r.json()),
-                        fetch(`${base}/billing`).then(r => r.json()),
-                        fetch(`${base}/doctors`).then(r => r.json()),
-                    ]);
-
-                    // Store the returned data in our variables
-                    this.summary  = s;
-                    this.patients = p.patients;
-                    this.bills    = b.bills;
-                    this.doctors  = d.doctors;
-                    this.loading  = false;
-
-                } catch (err) {
-                    // If any request fails, show the error state
-                    console.error('API error:', err);
-                    this.loading = false;
-                    this.error   = true;
-                }
-            },
+    drawBloodChart(){
+      const el=document.getElementById("bloodChart");
+      if(!el)return;
+      if(bloodChart)bloodChart.destroy();
+      const dist=this.bloodData.distribution||[];
+      const rare=["AB-","B-","A-","O-"];
+      bloodChart=new Chart(el,{
+        type:"doughnut",
+        data:{
+          labels:dist.map(r=>r.blood_group),
+          datasets:[{label:"Patients",data:dist.map(r=>Number(r.patient_count||0)),
+            backgroundColor:["#1f3864","#4169a1","#6b8fc5","#8fa8d1","#b8c8df","#c0392b","#e67e73","#d5d5d5"]}]
         },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{
+          title:{display:true,text:"Patient Blood Group Distribution"},
+          legend:{position:"right"},
+          tooltip:{callbacks:{label(ctx){
+            const label=ctx.label||"";
+            const count=ctx.parsed||0;
+            return " "+label+": "+count+" patients"+(rare.includes(label)?" (rare)":"");
+          }}}
+        }}
+      });
+    },
 
-        // mounted() runs automatically as soon as the page finishes loading.
-        // This is where we trigger the first data fetch.
-        mounted() {
-            this.fetchAll();
-        },
+    heatColor(val,max){
+      if(!val)return {background:"#f8f8f8",color:"#ccc"};
+      const intensity=val/max;
+      const r=Math.round(255-intensity*(255-31));
+      const g=Math.round(255-intensity*(255-56));
+      const b=Math.round(255-intensity*(255-100));
+      return {background:`rgb(${r},${g},${b})`,color:intensity>.5?"#fff":"#1a1a1a"};
+    }
+  },
 
-    }).mount('#app');  // Attach Vue to the div with id='app'
+  mounted(){this.fetchAll();}
+}).mount("#app");
 </script>
-
 </body>
 </html>
